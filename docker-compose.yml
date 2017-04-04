@@ -1,0 +1,14 @@
+version: '2'
+
+services:
+  rabbitmq:
+    image: rabbitmq:3-management
+
+  dev:
+    build: .
+    command: go test -cover ./...
+    volumes:
+      - .:/go/src/github.com/getconversio/go-utils
+    env_file: .env
+    depends_on:
+      - rabbitmq

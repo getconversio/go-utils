@@ -1,0 +1,13 @@
+language: go
+go:
+  - 1.7
+  - 1.8
+services:
+  - rabbitmq
+script:
+  - ./test.sh
+after_success:
+  - bash <(curl -s https://codecov.io/bash)
+notifications:
+  slack:
+    secure: F77lehJapOfdQOdUSIQAQZqYiJWd5FYnPNRIENSHHikLr4Oko2OJU5Z3xsD5e4j5qVWj/1VlkahLv3orBs9/m7SdQ4rv58zfvhdlX3gcQdpjXxPx1otEdH0t44eVBq21WVtuhlr4rB4wUtFd7RA6XgwiBxDRYadg+jY8IBn0Hsqf8ovIRmgINARPrLP4ma+c3q9DHvvByhuRxVeYT5RblSetS2Yj0GjFYI6JPg0/7qQ3x5P7Wboy66mwcKHcc8m1KMEDa9SlidV3X6V68O85fT0KNey4Ue8YaNd749Lb8tfc1TkCsjGV1y/mQbiQmVBPLsUJMeEekdnPke+y7gxhiu04WzPSyMohI6YnbH5+iPgxe4eVUO5nUgjnV0853kgpD7jqYJVbo2fapwbLfJj3Ti4xueKFfi4tbMGhPxSOogbkVCIvozPn8ph+SLRCzsbhy5wOsAqOh2S9Mmg5nLU85xuZMgRQMKI1MPiHu+MkFBjmBxqh8XeF6m1498bqE+SXLGP4G0diYSDmWPRAm8XiNNNZO66hEJtczrXdi8FMwR3jC5GY+/tMgfwRJFwgL+ikpS99uo8Xm/zIHZWs/u9jPiHI9H2yUuIuvWnzVyoxJNj1HAH+fMs0AvfGrwtUigWZz3vgnFLqCVKfJjicvOsGq92CT3eVL6LO/ZBjUlePo9E=
