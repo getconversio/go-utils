@@ -23,3 +23,14 @@ func StartListening() {
 		})
 }
 ```
+
+## Testing
+
+Basic testing:
+
+    $ docker-compose run --rm dev
+
+Testing the package is the default command for the dev container. To create a
+coverage profile:
+
+    $ docker-compose run --rm dev ./test.sh cover

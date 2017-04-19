@@ -5,7 +5,7 @@ go:
 services:
   - rabbitmq
 script:
-  - ./test.sh
+  - ./test.sh ci
 after_success:
   - bash <(curl -s https://codecov.io/bash)
 notifications:
