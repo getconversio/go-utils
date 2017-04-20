@@ -6,7 +6,7 @@ services:
 
   dev:
     build: .
-    command: go test -cover ./...
+    command: ./test.sh test
     volumes:
       - .:/go/src/github.com/getconversio/go-utils
     env_file: .env

@@ -42,6 +42,21 @@ func TestGetenvInt(t *testing.T) {
 	assert.Equal(t, 123, GetenvInt("anint", 111))
 }
 
+func TestGetenv(t *testing.T) {
+	err := os.Setenv("empty", "")
+	require.NoError(t, err)
+
+	err = os.Setenv("foo", "bar")
+	require.NoError(t, err)
+
+	// Has variable
+	assert.Equal(t, "bar", Getenv("foo", "baz"))
+
+	// Use fallback for both missing and empty fields
+	assert.Equal(t, "baz", Getenv("empty", "baz"))
+	assert.Equal(t, "baz", Getenv("noexists", "baz"))
+}
+
 func TestGracefulShutdown(t *testing.T) {
 	cleaned := false
 	ch := GracefulShutdown(func() { cleaned = true })

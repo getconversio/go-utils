@@ -23,4 +23,6 @@ _testmain.go
 *.test
 *.prof
 
-coverage.txt
+cover.out
+coverage.*
+cmd/
