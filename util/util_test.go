@@ -4,6 +4,7 @@ import (
 	"errors"
 	"io/ioutil"
 	"os"
+	"sync"
 	"syscall"
 	"testing"
 	"time"
@@ -58,11 +59,18 @@ func TestGetenv(t *testing.T) {
 }
 
 func TestGracefulShutdown(t *testing.T) {
+	mu := sync.Mutex{}
 	cleaned := false
-	ch := GracefulShutdown(func() { cleaned = true })
+	ch := GracefulShutdown(func() {
+		mu.Lock()
+		defer mu.Unlock()
+		cleaned = true
+	})
 
 	// It should not run immediately
+	mu.Lock()
 	assert.False(t, cleaned)
+	mu.Unlock()
 
 	// A SIGINT should run the cleanup function
 	syscall.Kill(syscall.Getpid(), syscall.SIGINT)
@@ -75,7 +83,9 @@ func TestGracefulShutdown(t *testing.T) {
 
 	// There should be nothing more in the channel
 	assert.Empty(t, ch)
+	mu.Lock()
 	assert.True(t, cleaned)
+	mu.Unlock()
 }
 
 func TestReadFileEnvsubst(t *testing.T) {
