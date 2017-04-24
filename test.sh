@@ -5,7 +5,7 @@ set -e
 ci() {
     echo "" > coverage.txt
 
-    for d in $(go list ./...); do
+    for d in $(go list ./... | grep -v -e cmd); do
         go test -coverprofile=profile.out $d
         if [ -f profile.out ]; then
             cat profile.out >> coverage.txt
@@ -16,23 +16,23 @@ ci() {
 
 test() {
     echo "Running tests"
-    go test -cover ./...
+    go test -cover $(go list ./... | grep -v -e cmd)
     exit $?
 }
 
 race() {
     echo "Running tests with race check"
-    go test -race ./...
+    go test -race $(go list ./... | grep -v -e cmd)
 }
 
 cover() {
     echo "Running coverage"
-    export PKGS=$(go list ./... | grep -v -e node_modules -e vendor)
-    export PKGS_DELIM=$(echo "$PKGS" | paste -sd "," -)
-    go list -f '{{if or (len .TestGoFiles) (len .XTestGoFiles)}}go test -covermode count -coverprofile {{.Name}}_{{len .Imports}}_{{len .Deps}}.coverprofile -coverpkg $PKGS_DELIM {{.ImportPath}}{{end}}' $PKGS | xargs -I {} bash -c {}
-    gocovmerge $(ls *.coverprofile) > cover.out
-    rm *.coverprofile
-    go tool cover -html cover.out -o coverage.html
+    rm coverage.txt
+    rm coverage.html
+    echo 'mode: atomic' > coverage.txt
+    go list ./... | grep -v -e cmd | xargs -n1 -I{} sh -c 'go test -covermode=count -coverprofile=coverage.tmp {} && tail -n +2 coverage.tmp >> coverage.txt'
+    rm coverage.tmp
+    go tool cover -html coverage.txt -o coverage.html
 }
 
 "$@"

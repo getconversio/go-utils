@@ -1,0 +1,13 @@
+{
+  "note": "The key in this json file was created with ssh-keygen. It was never a valid key",
+  "type": "service_account",
+  "project_id": "some-project",
+  "private_key_id": "some-private-key",
+  "private_key": "-----BEGIN RSA PRIVATE KEY-----\nMIIEowIBAAKCAQEAr5KKDM1zS2TLwzMwhn93UxzyChgvYdMx/f5D4nKu64TvorTw\nAUEHfIop1VVmT72tZdBN9LqIzJ/Nn8KUqyU3OPpRSP6Kewk7zXnSLipww1Lrt1dx\nZFrgJHCdCFss2CL02wwZLrlPzwzVsBD79duLc5UgZmRoG4oBXB6TJ7UTd0d73maf\no3bzZ0UGwMC8mTDwzryKCy6C6G6TIEfa5CP/amMbETaJLlE+089SqoQbRv0ALELR\nuJ+z83uvJ6fihMfZFJ6m475J6Z2DTgARrPfBezoNpqGYO446/lo9Uw1ch4r5W8Vh\nGiaf8BB/j3PtUwEPIULZn2+B04cYJJm7WTKytwIDAQABAoIBAHefNAe9A0zfBCWe\n/vTka/xowFA4YjAYoPsY/k+PK7a0AEGvXca888jaqd38LZUu+rFf131iikpApuyu\nunRRCur7Qd6l7twdUm2RDq79o46xNIDaRxvE/upU/+jtlgQ87O9Bsvaus72yVPV8\n3O6KAt1hQY4B4xzATmThQAnRyc19+XsSUAiyNf7qjHs1Dm0WkDp0exkxB+HKQRoB\nhN29ZRmYKtLBFRg+X9RQaBKFf1A1ZDn/G3S+ttwNY8R4ohKfi1TwvJq5GVPj37zB\nn93XmsvWfrn+lJNUC1NEyxGOvs4wPHNCWjd4k91kBPal3pO6VopHhd/+XjNEpTcS\n+xHxoyECgYEA4JzGg7m8F1hA7Wko6FbASm6Y9GLFuzlqRlWKQnakb4lKC+wKreOu\n4/Zr/AiSBlE/XhZphYXEvgLO/JhGtuFcPVU463AdweRdb8j4H2EvwI+/lkqn+cQC\n5F6SBigkT5R90Yzoz7p37QXoPYGQLfnyEVnKVpAcv+rD9sB0dlRm/40CgYEAyBtr\nnulTwsHX+sM1WIwSaTsHjTtc02i89kmdA6SvUKLZyO5LHXIDVngdb8vP5r2HNfuv\nqoXErBSQK4U9rb2xMtOrcHyy4JrJ83Sx6+x5o2E1YK0DMLL7mke4FIxjQgijAcPo\nElxjEeoW0MX6jwTjuhPk8BXtMq8R1VjoR1pDOFMCgYA9zAR2E3Djf12FtCwUGGIZ\nWGpuuooqY7aQmVJLzPaa1UvxEcUyaHUitRaqpfT/FfV4PnRTzyT9Hiqypna2NDS7\njyn05MjbIqhua/2QLJ4Fvcb5Y5rphftBt583YG31Eya2s60OEgCSztBBs9bmP2FR\nUsHvpQCz8LRvvC2OrNQVtQKBgHpvpJq3wuNAPckV1bcXBVDTqFw2vSYxSKUdB3Aq\nPIaHDeAORXF/yCEJH2G+/7b7shZKqAIbFOoBLvEh9kou7ZPexV/vPHeG3hgTB6YF\nq6tWmBVN5szORnnwdeZEu5q0tCApYP6S/p8AbvNQn20QndHFyGdJ0zcWvT+fxYea\n59Q3AoGBALGG9Xg1MMq5fXMQNvMl0BzXjk0H3784alYGSvT7fMkgvuG5oL5cDkIp\nBrFgHV/58PV6oHdGoNRbK6QppeKP851YDjfbwstrBJHzUYJj/qg26dHTj/rbJbut\n3RjOWUIn8uf3SwW1SrbwPHtbrUAQi6M+iVvivveOoquREVVgp9//\n-----END RSA PRIVATE KEY-----",
+  "client_email": "some-email@some-project.iam.gserviceaccount.com",
+  "client_id": "1234",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://accounts.google.com/o/oauth2/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/bigquery-dev%40some-project.iam.gserviceaccount.com"
+}
