@@ -72,27 +72,31 @@ func TestSetup(t *testing.T) {
 	assert.NotNil(t, wrapper)
 }
 
+func TestClose(t *testing.T) {
+	SetupStreamingInserts()
+
+	// Test that we can close twice without error
+	Close()
+	Close()
+}
+
 func TestBigqueryWrapper(t *testing.T) {
 	setup()
 	defer teardown()
 
-	prevEnv := os.Getenv("ENV")
-	defer os.Setenv("ENV", prevEnv)
-	err := os.Setenv("ENV", "test")
-	require.NoError(t, err)
+	// Set up a new wrapper and get the current machine's hostname
+	wrapper := Setup()
 	hostname, err := os.Hostname()
 	require.NoError(t, err)
 	hostname = util.Hash32(hostname)
 
-	wrapper := Setup()
-	// TableID should be prefixed for development and test
+	// TableID should be prefixed if specified
+	wrapper.UseTablePrefix(true)
 	tableId := wrapper.TableId("mytable")
 	assert.Equal(t, fmt.Sprintf("%s_mytable", hostname), tableId)
 
-	// Use production for the rest of the tests
-	os.Setenv("ENV", "production")
-	wrapper = Setup()
-
+	// Use non-prefixed tables for the rest of the tests
+	wrapper.UseTablePrefix(false)
 	tableId = wrapper.TableId("mytable")
 	assert.Equal(t, "mytable", tableId)
 

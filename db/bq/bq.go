@@ -29,23 +29,23 @@ type BigQueryWrapper struct {
 
 var insertWorker *bqstreamer.AsyncWorkerGroup
 
-func (w BigQueryWrapper) Dataset() *bigquery.Dataset {
+func (w *BigQueryWrapper) Dataset() *bigquery.Dataset {
 	return w.Client.Dataset(w.DatasetId)
 }
 
-func (w BigQueryWrapper) TableId(tableId string) string {
+func (w *BigQueryWrapper) TableId(tableId string) string {
 	if w.TablePrefix != "" {
 		tableId = fmt.Sprintf("%s_%s", w.TablePrefix, tableId)
 	}
 	return tableId
 }
 
-func (w BigQueryWrapper) Table(tableId string) *bigquery.Table {
+func (w *BigQueryWrapper) Table(tableId string) *bigquery.Table {
 	tableId = w.TableId(tableId)
 	return w.Dataset().Table(tableId)
 }
 
-func (w BigQueryWrapper) AddRow(tableId string, row interface{}) error {
+func (w *BigQueryWrapper) AddRow(tableId string, row interface{}) error {
 	data, err := EncodeLegacy(row, true)
 	if err != nil {
 		return err
@@ -56,18 +56,22 @@ func (w BigQueryWrapper) AddRow(tableId string, row interface{}) error {
 	return nil
 }
 
+func (w *BigQueryWrapper) UseTablePrefix(useIt bool) {
+	if useIt {
+		hostname, err := os.Hostname()
+		util.PanicOnError("Cannot get hostname", err)
+		w.TablePrefix = util.Hash32(hostname)
+	} else {
+		w.TablePrefix = ""
+	}
+}
+
 // Creates a new wrapper for a bigquery client
 func NewBigQueryWrapper(client *bigquery.Client, projectId, datasetId string) *BigQueryWrapper {
 	wrapper := BigQueryWrapper{
 		Client:    client,
 		ProjectId: projectId,
 		DatasetId: datasetId,
-	}
-
-	if os.Getenv("ENV") == "development" || os.Getenv("ENV") == "test" {
-		hostname, err := os.Hostname()
-		util.PanicOnError("Cannot get hostname", err)
-		wrapper.TablePrefix = util.Hash32(hostname)
 	}
 
 	return &wrapper
@@ -98,6 +102,7 @@ func Close() {
 	if insertWorker != nil {
 		log.Info("Waiting for BigQuery insert worker to finish")
 		insertWorker.Close()
+		insertWorker = nil
 	}
 }
 

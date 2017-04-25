@@ -27,8 +27,9 @@ race() {
 
 cover() {
     echo "Running coverage"
-    rm coverage.txt
-    rm coverage.html
+    rm -f coverage.txt
+    rm -f coverage.html
+    touch coverage.tmp
     echo 'mode: atomic' > coverage.txt
     go list ./... | grep -v -e cmd | xargs -n1 -I{} sh -c 'go test -covermode=count -coverprofile=coverage.tmp {} && tail -n +2 coverage.tmp >> coverage.txt'
     rm coverage.tmp
