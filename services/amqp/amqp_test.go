@@ -85,9 +85,9 @@ func teardown() {
 
 func testHandle(f func(interface{}, amqp.Table) error) string {
 	return HandleFunc(
-		"test.mctest", // Queue name
-		"test",        // Exchange name
-		"test.mctest", // Routing key
+		"test.mctest",  // Queue name
+		"test",         // Exchange name
+		"test.routing", // Routing key
 		new(msgType),
 		f)
 }
@@ -159,7 +159,7 @@ func TestHandleFunc(t *testing.T) {
 		// Force an error
 		err := ch.Publish(
 			"test",
-			"test.mctest",
+			"test.routing",
 			false,
 			false,
 			amqp.Publishing{
@@ -209,7 +209,7 @@ func TestEnsureRetryConsumer(t *testing.T) {
 	defer teardown()
 
 	testHandle(func(msg interface{}, headers amqp.Table) error {
-		intChannel <- 1
+		intChannel <- msg.(*msgType).I
 		return nil
 	})
 
@@ -218,7 +218,7 @@ func TestEnsureRetryConsumer(t *testing.T) {
 	headers := amqp.Table{
 		"_retryNumber":  "1",
 		"_exchangeName": "test",
-		"_routingKey":   "test.mctest",
+		"_routingKey":   "test.routing",
 	}
 
 	err := ch.Publish(
@@ -228,14 +228,14 @@ func TestEnsureRetryConsumer(t *testing.T) {
 		false, // Immediate
 		amqp.Publishing{
 			ContentType: "application/json",
-			Body:        []byte("{}"),
+			Body:        []byte(`{"i":1337}`),
 			Headers:     headers,
 		})
 
 	require.NoError(t, err)
 
 	i := <-intChannel
-	assert.Equal(t, 1, i)
+	assert.Equal(t, 1337, i)
 }
 
 func TestSharedState(t *testing.T) {
@@ -252,7 +252,7 @@ func TestSharedState(t *testing.T) {
 
 	err := ch.Publish(
 		"test",
-		"test.mctest",
+		"test.routing",
 		false, // Mandatory
 		false, // Immediate
 		amqp.Publishing{
@@ -267,7 +267,7 @@ func TestSharedState(t *testing.T) {
 
 	err = ch.Publish(
 		"test",
-		"test.mctest",
+		"test.routing",
 		false, // Mandatory
 		false, // Immediate
 		amqp.Publishing{
@@ -309,4 +309,98 @@ func TestCloseOnCancel(t *testing.T) {
 		return
 	}
 	t.Errorf("process ran with err %v, want exit status 1, %v", err, cmd.Path)
+}
+
+func TestPurgeQueue(t *testing.T) {
+	setup()
+	defer teardown()
+
+	EnsureQueue("test.mctest")
+
+	err := ch.Publish(
+		"",
+		"test.mctest",
+		false, // Mandatory
+		false, // Immediate
+		amqp.Publishing{
+			ContentType: "application/json",
+			Body:        []byte(`{}`),
+		})
+	require.NoError(t, err)
+
+	// Make sure that the message arrived.
+	util.ValidateWithTimeout(t, func() bool {
+		queue, err := ch.QueueInspect("test.mctest")
+		require.NoError(t, err)
+		return queue.Messages == 1
+	}, 2000)
+
+	// Should purge the queue synchronously
+	PurgeQueue("test.mctest")
+
+	queue, err := ch.QueueInspect("test.mctest")
+	require.NoError(t, err)
+	assert.Equal(t, 0, queue.Messages)
+}
+
+func TestQueueTotalMessages(t *testing.T) {
+	setup()
+	defer teardown()
+
+	EnsureQueue("test.mctest")
+	EnsureQueue("test.mctest2")
+	defer ch.QueueDelete("test.mctest2", false, false, false)
+
+	err := ch.Publish(
+		"",
+		"test.mctest",
+		false, // Mandatory
+		false, // Immediate
+		amqp.Publishing{
+			ContentType: "application/json",
+			Body:        []byte(`{}`),
+		})
+	require.NoError(t, err)
+
+	err = ch.Publish(
+		"",
+		"test.mctest2",
+		false, // Mandatory
+		false, // Immediate
+		amqp.Publishing{
+			ContentType: "application/json",
+			Body:        []byte(`{}`),
+		})
+	require.NoError(t, err)
+
+	// Make sure that the message arrived.
+	util.ValidateWithTimeout(t, func() bool {
+		queue, err := ch.QueueInspect("test.mctest")
+		queue2, err2 := ch.QueueInspect("test.mctest2")
+		require.NoError(t, err)
+		require.NoError(t, err2)
+		return queue.Messages == 1 && queue2.Messages == 1
+	}, 2000)
+
+	// Should purge the queue synchronously
+	num := QueueTotalMessages([]string{"test.mctest"})
+	assert.Equal(t, 1, num)
+
+	num = QueueTotalMessages([]string{"test.mctest", "test.mctest2"})
+	assert.Equal(t, 2, num)
+}
+
+func TestPublish(t *testing.T) {
+	setup()
+	defer teardown()
+
+	testHandle(func(msg interface{}, headers amqp.Table) error {
+		intChannel <- msg.(*msgType).I
+		return nil
+	})
+
+	Publish("test", "test.routing", msgType{42})
+
+	i := <-intChannel
+	assert.Equal(t, 42, i)
 }

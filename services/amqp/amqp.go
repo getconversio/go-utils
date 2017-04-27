@@ -127,7 +127,8 @@ func ensureChannel() {
 }
 
 // Ensures that the exchange with the given name exists.
-func ensureExchange(exchangeName string) {
+// It is not necessary to call this function when using HandleFunc
+func EnsureExchange(exchangeName string) {
 	ensureChannel()
 
 	err := ch.ExchangeDeclare(
@@ -143,6 +144,7 @@ func ensureExchange(exchangeName string) {
 }
 
 // Ensures that the queue with the given name exists.
+// It is not necessary to call this function when using HandleFunc
 func EnsureQueue(queueName string) {
 	ensureChannel()
 
@@ -162,17 +164,31 @@ func PurgeQueue(queueName string) {
 	util.PanicOnError("Failed to purge RabbitMQ queue", err)
 }
 
-type amqpT struct{}
+// A raw message struct. Used by the retry handler.
+// Note: while encoding/json has a RawMessage type that works essentially the
+// same way, it did not work well for this use case.
+type retryCarrier struct {
+	Raw []byte
+}
 
-func (t *amqpT) NewEmpty() interface{} {
-	return new(amqpT)
+func (t *retryCarrier) NewEmpty() interface{} {
+	return new(retryCarrier)
+}
+
+func (t *retryCarrier) UnmarshalJSON(data []byte) error {
+	t.Raw = data
+	return nil
+}
+
+func (t *retryCarrier) MarshalJSON() ([]byte, error) {
+	return t.Raw, nil
 }
 
 func EnsureRetryConsumer() {
 	retryConsumerOnce.Do(func() {
 		ensureChannel()
 
-		HandleFunc(readyQueueName, retryExchange, retryRoutingKey, new(amqpT), func(msg interface{}, headers amqp.Table) error {
+		HandleFunc(readyQueueName, retryExchange, retryRoutingKey, new(retryCarrier), func(msg interface{}, headers amqp.Table) error {
 			retryNumber, _ := strconv.Atoi(headers["_retryNumber"].(string))
 			if retryNumber >= len(queueTtls) {
 				log.Error("Permanent task failure")
@@ -254,7 +270,7 @@ func publishRetry(message amqp.Delivery) error {
 // able to cast the returned message into the right type.
 func HandleFunc(queueName, exchangeName, routingKey string, msgCreator EmptyCreator, handler func(interface{}, amqp.Table) error) string {
 	ensureChannel()
-	ensureExchange(exchangeName)
+	EnsureExchange(exchangeName)
 	EnsureQueue(queueName)
 
 	err := ch.QueueBind(queueName, routingKey, exchangeName, false, nil)
@@ -300,7 +316,7 @@ func HandleFunc(queueName, exchangeName, routingKey string, msgCreator EmptyCrea
 			// An error when unmarshalling the JSON is not something we can
 			// retry. Log an error and ack the message.
 			if err != nil {
-				logger.WithField("body", msg.Body).Errorf("Could not unmarshal AMQP message: %s", err)
+				logger.WithField("body", fmt.Sprintf("%s", msg.Body)).Errorf("Could not unmarshal AMQP message: %s", err)
 				msg.Ack(false)
 				continue
 			}
