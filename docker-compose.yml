@@ -3,6 +3,8 @@ version: '2'
 services:
   rabbitmq:
     image: rabbitmq:3-management
+  mongo:
+    image: mongo:3
 
   dev:
     build: .
@@ -12,3 +14,4 @@ services:
     env_file: .env
     depends_on:
       - rabbitmq
+      - mongo

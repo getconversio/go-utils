@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/getconversio/go-utils/util"
-	"github.com/hashicorp/golang-lru"
 )
 
 const (
@@ -19,9 +18,14 @@ const (
 )
 
 var (
-	cache *lru.ARCCache
+	cache Cache
 	token string
 )
+
+type Cache interface {
+	Add(string, Rates) error
+	Get(string) (*Rates, error)
+}
 
 type Rates struct {
 	ID        string             `json:"id" bson:"_id"`
@@ -29,6 +33,12 @@ type Rates struct {
 	Timestamp int                `json:"timestamp" bson:"timestamp"`
 	Base      string             `json:"base" bson:"base"`
 	Rates     map[string]float64 `json:"rates" bson:"rates"`
+}
+
+type NotFoundError struct{}
+
+func (e NotFoundError) Error() string {
+	return "not found"
 }
 
 // Returns historical rates for the given date string, formatted as "yyyy-mm-dd"
@@ -54,17 +64,20 @@ func Historical(date string) (*Rates, error) {
 
 func cachedHistoricalRates(date time.Time) (*Rates, error) {
 	dateStr := date.Format("2006-01-02")
-	if rates, ok := cache.Get(dateStr); ok {
-		return rates.(*Rates), nil
+	rates, err := cache.Get(dateStr)
+	if err == nil {
+		return rates, nil
+	} else if _, ok := err.(NotFoundError); !ok {
+		return nil, err
 	}
 
-	rates, err := Historical(dateStr)
+	rates, err = Historical(dateStr)
 	if err != nil {
 		return nil, err
 	}
 
 	rates.ID = dateStr
-	cache.Add(rates.ID, rates)
+	cache.Add(rates.ID, *rates)
 	return rates, nil
 }
 
@@ -84,10 +97,30 @@ func ConvertCurrency(from, to string, amount float64, date time.Time) (float64, 
 	return 0, errors.New(fmt.Sprintf("Cannot convert from %v to %v", from, to))
 }
 
-func Setup() {
-	token = os.Getenv("OPEN_EXCHANGE_RATES")
+// Setup options for
+type Options struct {
+	Token string
+	Cache Cache
+}
 
-	var err error
-	cache, err = lru.NewARC(100) // TODO, make size configurable.
-	util.PanicOnError("Could not initialize LRU Cache", err)
+// Prepares for Open Exchange Rates API calls. Includes setting up the exchange
+// rate cache. Expects environment variables such as
+func Setup(options *Options) {
+	if options == nil {
+		options = &Options{}
+	}
+
+	if options.Token == "" {
+		// Try an environment variable for OXR if the given options token is empty.
+		options.Token = os.Getenv("OPEN_EXCHANGE_RATES")
+	}
+
+	if options.Cache == nil {
+		var err error
+		options.Cache, err = NewLRUCache(100)
+		util.PanicOnError("Could not initialize LRU Cache", err)
+	}
+
+	token = options.Token
+	cache = options.Cache
 }
