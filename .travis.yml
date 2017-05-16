@@ -4,6 +4,7 @@ go:
   - 1.8
 services:
   - rabbitmq
+  - mongodb
 script:
   - ./test.sh ci
 after_success:

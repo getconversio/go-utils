@@ -2,11 +2,14 @@ package oxr
 
 import (
 	"net/http"
+	"os"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"gopkg.in/jarcoal/httpmock.v1"
+	"gopkg.in/mgo.v2"
 )
 
 const oxrRates string = `{
@@ -21,19 +24,26 @@ const oxrRates string = `{
     }
 }`
 
-func setupOXR() {
-	Setup()
+func setup() {
+	Setup(nil)
 	httpmock.Activate()
 }
 
-func teardownOXR() {
+func teardown() {
 	httpmock.DeactivateAndReset()
 }
 
-func TestConvertCurrency(t *testing.T) {
-	setupOXR()
-	defer teardownOXR()
+func TestBasicSetup(t *testing.T) {
+	Setup(nil)
 
+	// It should fetch the api key from the environment by default
+	assert.Equal(t, "apikey", token)
+
+	// It should use LRU cache by default
+	assert.IsType(t, &LRUCache{}, cache)
+}
+
+func testConvertCurrency(t *testing.T) {
 	httpCallCount := 0
 	httpmock.RegisterResponder("GET", "https://openexchangerates.org/api/historical/2016-01-01.json",
 		func(req *http.Request) (*http.Response, error) {
@@ -57,4 +67,40 @@ func TestConvertCurrency(t *testing.T) {
 	// Error on unknown currencies.
 	_, err = ConvertCurrency("USD", "NOK", 1.0, jan1)
 	assert.EqualError(t, err, "Cannot convert from USD to NOK")
+}
+
+func TestConvertCurrency(t *testing.T) {
+	setup()
+	defer teardown()
+	testConvertCurrency(t)
+}
+
+func TestConvertCurrencyWithMongo(t *testing.T) {
+	setup()
+	defer teardown()
+
+	session, err := mgo.Dial(os.Getenv("MONGODB_URL"))
+	require.NoError(t, err)
+	session.DB("").C("oxr").DropCollection()
+	session.DB("").C("blah").DropCollection()
+
+	// Test default collection
+	Setup(&Options{
+		Cache: NewMongoCache(session, "", ""),
+	})
+	testConvertCurrency(t)
+
+	// Test specific collection
+	Setup(&Options{
+		Cache: NewMongoCache(session, "", "blah"),
+	})
+	testConvertCurrency(t)
+
+	// Just to make sure we actually used MongoDB :-)
+	cnt, err := session.DB("").C("oxr").Find(nil).Count()
+	require.NoError(t, err)
+	assert.Equal(t, 1, cnt)
+	cnt, err = session.DB("").C("blah").Find(nil).Count()
+	require.NoError(t, err)
+	assert.Equal(t, 1, cnt)
 }
