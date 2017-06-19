@@ -8,8 +8,8 @@ import (
 	"sync"
 	"sync/atomic"
 
-	log "github.com/Sirupsen/logrus"
 	"github.com/getconversio/go-utils/util"
+	log "github.com/sirupsen/logrus"
 	"github.com/streadway/amqp"
 )
 
@@ -215,6 +215,12 @@ func EnsureRetryConsumer() {
 	})
 }
 
+// Publish publishes a new message on the given exchange and using the given
+// routing key.
+//
+// Notice that unlike all other Ensure* functions, Publish only makes sure there
+// is an open connection and channel. It does not make sure the exchange is
+// present.
 func Publish(exchangeName, routingKey string, msg interface{}) error {
 	ensureChannel()
 
@@ -265,10 +271,17 @@ func publishRetry(message amqp.Delivery) error {
 		})
 }
 
-// Sets up a handler function for the given queue, exchange and routing key.
-// The handlerMsg interface is needed in order for the returned handler to be
+// HandleFunc sets up a handler/consumer function for the given queue, exchange
+// and routing key. It ensures that there is an open connection and channel.
+//
+// It is assumed that message communication happens via JSON-formatted messages.
+//
+// The msgCreator interface is needed in order for the returned handler to be
 // able to cast the returned message into the right type.
-func HandleFunc(queueName, exchangeName, routingKey string, msgCreator EmptyCreator, handler func(interface{}, amqp.Table) error) string {
+//
+// Returns the ctag for the consumer and the channel that the consumer was
+// opened on.
+func HandleFunc(queueName, exchangeName, routingKey string, msgCreator EmptyCreator, handler func(interface{}, amqp.Table) error) (string, *amqp.Channel) {
 	ensureChannel()
 	EnsureExchange(exchangeName)
 	EnsureQueue(queueName)
@@ -346,9 +359,11 @@ func HandleFunc(queueName, exchangeName, routingKey string, msgCreator EmptyCrea
 	}()
 
 	logger.Debug("Handler waiting for messages")
-	return ctag
+	return ctag, ch
 }
 
+// QueueTotalMessages returns the number of messages across the given queue
+// names.
 func QueueTotalMessages(queueNames []string) int {
 	ensureChannel()
 

@@ -11,7 +11,7 @@ import (
 	"time"
 
 	"cloud.google.com/go/bigquery"
-	log "github.com/Sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 	"github.com/getconversio/go-utils/util"
 	"golang.org/x/net/context"
 	"golang.org/x/oauth2/google"
