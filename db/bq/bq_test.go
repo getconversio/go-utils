@@ -11,7 +11,7 @@ import (
 	"testing"
 
 	"cloud.google.com/go/bigquery"
-	logtest "github.com/Sirupsen/logrus/hooks/test"
+	logtest "github.com/sirupsen/logrus/hooks/test"
 	"github.com/getconversio/go-utils/util"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

@@ -83,7 +83,7 @@ func teardown() {
 	close(intChannel)
 }
 
-func testHandle(f func(interface{}, amqp.Table) error) string {
+func testHandle(f func(interface{}, amqp.Table) error) (string, *amqp.Channel) {
 	return HandleFunc(
 		"test.mctest",  // Queue name
 		"test",         // Exchange name
@@ -154,7 +154,7 @@ func TestHandleFunc(t *testing.T) {
 	for _, c := range cases {
 		resetAcksNack()
 		resetQueues(t)
-		ctag := testHandle(c.fun)
+		ctag, _ := testHandle(c.fun)
 
 		// Force an error
 		err := ch.Publish(
@@ -295,7 +295,7 @@ func TestCloseOnCancel(t *testing.T) {
 		err = os.Setenv("RABBITMQ_EXIT_ON_CLOSE", "yes")
 		require.NoError(t, err)
 
-		ctag := testHandle(func(msg interface{}, headers amqp.Table) error { return nil })
+		ctag, _ := testHandle(func(msg interface{}, headers amqp.Table) error { return nil })
 		ch.Cancel(ctag, false) // This should exit the process
 
 		// Allow up to five seconds time for the handler to cancel and close

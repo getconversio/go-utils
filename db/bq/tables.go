@@ -2,7 +2,7 @@ package bq
 
 import (
 	"cloud.google.com/go/bigquery"
-	log "github.com/Sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 	"golang.org/x/net/context"
 )
 

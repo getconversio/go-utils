@@ -3,9 +3,9 @@ package log
 import (
 	"os"
 
-	log "github.com/Sirupsen/logrus"
 	"github.com/getconversio/go-utils/util"
-	"github.com/puddingfactory/logentrus"
+	"github.com/getconversio/logentrus"
+	log "github.com/sirupsen/logrus"
 )
 
 func Setup() {
