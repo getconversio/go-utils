@@ -6,7 +6,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-// Setup options for Open Exchange Rates
+// Setup options for logging with logrus
 type Options struct {
 	Environment     string
 	LogentriesToken string
