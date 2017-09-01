@@ -47,7 +47,7 @@ func EnsureTable(table *bigquery.Table, schema bigquery.Schema, options ...bigqu
 	} else if !IsSameSchema(schema, meta.Schema) {
 		logger.Info("Schema is out of date. Updating it")
 		update := bigquery.TableMetadataToUpdate{Schema: schema}
-		if meta, err = table.Update(ctx, update); err != nil {
+		if meta, err = table.Update(ctx, update, meta.ETag); err != nil {
 			logger.Panic("Could not update BigQuery table", err)
 		}
 	}
