@@ -1,7 +1,6 @@
 package log
 
 import (
-	"os"
 	"testing"
 
 	log "github.com/sirupsen/logrus"
@@ -9,22 +8,19 @@ import (
 )
 
 func TestSetup(t *testing.T) {
-	defer os.Setenv("ENV", os.Getenv("ENV"))
-	defer os.Setenv("LOGENTRIES_TOKEN", os.Getenv("LOGENTRIES_TOKEN"))
-
 	// Should use INFO level by default
-	Setup()
+	Setup(nil)
 	assert.Equal(t, log.InfoLevel, log.GetLevel())
 	assert.Empty(t, log.StandardLogger().Hooks)
 
 	// Should use DEBUG level in dev
-	os.Setenv("ENV", "development")
-	Setup()
+	options := Options{Environment: "development"}
+	Setup(&options)
 	assert.Equal(t, log.DebugLevel, log.GetLevel())
 	assert.Empty(t, log.StandardLogger().Hooks)
 
 	// Should add logentries hook if token is present
-	os.Setenv("LOGENTRIES_TOKEN", "abcd")
-	Setup()
+	options = Options{LogentriesToken: "abcd"}
+	Setup(&options)
 	assert.NotEmpty(t, log.StandardLogger().Hooks)
 }

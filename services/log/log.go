@@ -1,25 +1,33 @@
 package log
 
 import (
-	"os"
-
 	"github.com/getconversio/go-utils/util"
-	"github.com/getconversio/logentrus"
+	"github.com/puddingfactory/logentrus"
 	log "github.com/sirupsen/logrus"
 )
 
-func Setup() {
+// Setup options for logging with logrus
+type Options struct {
+	Environment     string
+	LogentriesToken string
+}
+
+func Setup(options *Options) {
+	if options == nil {
+		options = &Options{}
+	}
+
 	level := log.InfoLevel
 
-	if os.Getenv("ENV") == "development" {
+	if options.Environment == "development" {
 		level = log.DebugLevel
 		log.SetFormatter(&log.TextFormatter{ForceColors: true})
 	}
 
 	log.SetLevel(level)
 
-	if token := os.Getenv("LOGENTRIES_TOKEN"); token != "" {
-		hook, err := logentrus.New(token, &logentrus.Opts{Priority: level})
+	if options.LogentriesToken != "" {
+		hook, err := logentrus.New(options.LogentriesToken, &logentrus.Opts{Priority: level})
 		util.PanicOnError("Could not create logentries hook", err)
 		log.AddHook(hook)
 	}

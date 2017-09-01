@@ -97,7 +97,7 @@ func ConvertCurrency(from, to string, amount float64, date time.Time) (float64, 
 	return 0, errors.New(fmt.Sprintf("Cannot convert from %v to %v", from, to))
 }
 
-// Setup options for
+// Setup options for Open Exchange Rates
 type Options struct {
 	Token string
 	Cache Cache
