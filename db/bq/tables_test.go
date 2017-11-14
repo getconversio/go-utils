@@ -87,7 +87,7 @@ func TestEnsureTableUpdate(t *testing.T) {
 	require.NotNil(t, wrapper)
 	table := wrapper.Table("mytable")
 
-	EnsureTable(table, schema)
+	EnsureTable(table, schema, nil)
 
 	// Ensure that the table was fetched, it determined the schema is wrong, and it updated.
 	callInfo := httpmock.GetCallCountInfo()
@@ -135,15 +135,26 @@ func TestEnsureTableCreate(t *testing.T) {
 	require.NotNil(t, wrapper)
 	table := wrapper.Table("mytable")
 
-	EnsureTable(table, schema)
-	assert.NoError(t, err)
+	// Prepare a test function.
+	checkCalls := func(callCount int) {
+		// Ensure that the table was fetched, it determined there was no table, and it created the table.
+		callInfo := httpmock.GetCallCountInfo()
+		getRequest := fmt.Sprintf("GET %s", tableUrl)
+		postRequest := fmt.Sprintf("POST %s", tablesUrl)
+		assert.Equal(t, callCount, callInfo[getRequest])
+		assert.Equal(t, callCount, callInfo[postRequest])
+	}
 
-	// Ensure that the table was fetched, it determined there was no table, and it created the table.
-	callInfo := httpmock.GetCallCountInfo()
-	getRequest := fmt.Sprintf("GET %s", tableUrl)
-	postRequest := fmt.Sprintf("POST %s", tablesUrl)
-	assert.Equal(t, 1, callInfo[getRequest])
-	assert.Equal(t, 1, callInfo[postRequest])
+	EnsureTable(table, schema, nil)
+	assert.NoError(t, err)
+	checkCalls(1)
+
+	// Check table with extra metadata
+	EnsureTable(table, schema, &bigquery.TableMetadata{
+		TimePartitioning: &bigquery.TimePartitioning{},
+	})
+	assert.NoError(t, err)
+	checkCalls(2)
 }
 
 func TestEnsureTablePanic(t *testing.T) {
@@ -184,5 +195,5 @@ func TestEnsureTablePanic(t *testing.T) {
 	require.NotNil(t, wrapper)
 	table := wrapper.Table("mytable")
 
-	assert.Panics(t, func() { EnsureTable(table, schema) })
+	assert.Panics(t, func() { EnsureTable(table, schema, nil) })
 }
