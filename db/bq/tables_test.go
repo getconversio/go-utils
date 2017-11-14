@@ -87,7 +87,7 @@ func TestEnsureTableUpdate(t *testing.T) {
 	require.NotNil(t, wrapper)
 	table := wrapper.Table("mytable")
 
-	EnsureTable(table, schema)
+	EnsureTable(table, schema, nil)
 
 	// Ensure that the table was fetched, it determined the schema is wrong, and it updated.
 	callInfo := httpmock.GetCallCountInfo()
@@ -135,7 +135,7 @@ func TestEnsureTableCreate(t *testing.T) {
 	require.NotNil(t, wrapper)
 	table := wrapper.Table("mytable")
 
-	EnsureTable(table, schema)
+	EnsureTable(table, schema, nil)
 	assert.NoError(t, err)
 
 	// Ensure that the table was fetched, it determined there was no table, and it created the table.
@@ -184,5 +184,5 @@ func TestEnsureTablePanic(t *testing.T) {
 	require.NotNil(t, wrapper)
 	table := wrapper.Table("mytable")
 
-	assert.Panics(t, func() { EnsureTable(table, schema) })
+	assert.Panics(t, func() { EnsureTable(table, schema, nil) })
 }

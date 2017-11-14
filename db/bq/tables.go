@@ -30,7 +30,7 @@ func IsSameSchema(s1, s2 bigquery.Schema) bool {
 // - If the table exists but the schema is outdated, it will be updated
 // - Otherwise nothing happens
 // The function panics if any of its API calls fail.
-func EnsureTable(table *bigquery.Table, schema bigquery.Schema, options ...bigquery.CreateTableOption) {
+func EnsureTable(table *bigquery.Table, schema bigquery.Schema, extraMeta *bigquery.TableMetadata) {
 	ctx := context.Background()
 
 	logger := log.WithField("table", table.TableID)
@@ -40,8 +40,13 @@ func EnsureTable(table *bigquery.Table, schema bigquery.Schema, options ...bigqu
 
 	if err != nil {
 		logger.Info("Error fetching table. Assuming it does not exist. Creating it")
-		options = append(options, schema)
-		if err = table.Create(ctx, options...); err != nil {
+		if extraMeta != nil {
+			meta = extraMeta
+		} else {
+			meta = &bigquery.TableMetadata{}
+		}
+		meta.Schema = schema
+		if err = table.Create(ctx, meta); err != nil {
 			logger.Panic("Could not create BigQuery table", err)
 		}
 	} else if !IsSameSchema(schema, meta.Schema) {
