@@ -2,7 +2,7 @@ package log
 
 import (
 	"github.com/getconversio/go-utils/util"
-	"github.com/puddingfactory/logentrus"
+	"github.com/jonathan-robertson/logentrus"
 	log "github.com/sirupsen/logrus"
 )
 
